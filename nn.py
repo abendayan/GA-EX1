@@ -1,5 +1,6 @@
 # Adele Bendayan 336141056
 import sys
+import numpy as np
 import cPickle, gzip
 import time
 import pdb
