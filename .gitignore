@@ -3,3 +3,4 @@
 *.pkl.gz
 .idea/
 *.csv
+*.h5

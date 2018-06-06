@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from nn import NN as NN
-
+import pickle
 
 class GenomeHandler:
     def __init__(self, nn_param_choices):
@@ -18,8 +18,8 @@ class GenomeHandler:
 
     def decode(self, genome):
         dim = [784]
-        for _ in range(genome['nb_layers']):
-            dim.append(genome['nb_neurons'])
+        for neurons in genome['nb_neurons']:
+            dim.append(neurons)
         dim.append(10)
         model = NN(genome['activation'], dim)
         return model
@@ -39,6 +39,9 @@ class GenomeHandler:
         network = {}
         for key in self.nn_param_choices:
             network[key] = random.choice(self.nn_param_choices[key])
+        network['nb_neurons'] = []
+        for _ in range(network['nb_layers']):
+            network['nb_neurons'].append(random.choice(self.nn_param_choices['nb_neurons']))
         return network
 
     # metric = accuracy or loss
@@ -52,5 +55,5 @@ class GenomeHandler:
             genome += list(data[row, -2:])
         return genome
 
-    def load_model(self, models_file=""):
-        pass
+    def load_model(self, models_file):
+        return pickle.load(open(models_file))

@@ -71,7 +71,7 @@ class GA:
             res = self.evaluate(members[i], epochs)
             v = res[-1]
             del res
-            print(v)
+            # print(v)
             fit.append(v)
 
         fit = np.array(fit)
@@ -101,7 +101,7 @@ class GA:
             print("Generation {3}:\t\tbest {4}: {0:0.4f}\t\taverage: {1:0.4f}\t\tstd: {2:0.4f}" \
                   .format(self.metric_objective(fit), np.mean(fit), np.std(fit), gen + 1, self.metric))
 
-        return GenomeHandler.load_model('best-model.h5')
+        return self.genome_handler.load_model('best-model.h5')
 
     def evaluate(self, genome, epochs):
         model = self.genome_handler.decode(genome)
