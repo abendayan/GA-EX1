@@ -8,8 +8,8 @@ import pdb
 from random import shuffle
 from math import log, sqrt
 
-EPOCHS = 100
-BATCH_SIZE = 12
+EPOCHS = 60
+BATCH_SIZE = 1
 CLASSES = 10
 
 start_time = time.time()
@@ -35,7 +35,7 @@ class Activation:
             x = 1 / (1 + np.exp(-x))
         return x
 
-    def ReLU(self, derivate = False):
+    def ReLU(self, x, derivate = False):
         if derivate:
             x = 1. * (x > 0)
             x[x == 0] = 0
