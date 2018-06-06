@@ -104,6 +104,18 @@ class NN:
                 bad += 1
         return good / (good + bad)
 
+    def validate_batch(self, x, y, batch_size):
+        good = bad = 0.0
+        for i in range(0, len(y), batch_size):
+            x_batch = x[i:i+batch_size]
+            y_batch = y[i:i+batch_size]
+            labels = self.predict(x_batch)
+            for (label, true_label) in zip(labels, y_batch):
+                if label == true_label:
+                    good += 1
+                else:
+                    bad += 1
+        return good / (good + bad)
 
     def loss_and_gradients(self, x, Y):
         U, b_tag = self.params[-1]

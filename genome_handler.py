@@ -21,7 +21,7 @@ class GenomeHandler:
                 if network['nb_layers'] > len(network['nb_neurons']):
                     for _ in range(network['nb_layers'] - len(network['nb_neurons'])):
                         network['nb_neurons'].append(random.choice(self.nn_param_choices['nb_neurons']))
-                else:
+                elif network['nb_layers'] < len(network['nb_neurons']):
                     network['nb_neurons'] = network['nb_neurons'][:-network['nb_layers']]
             else:
                 network[mutation] = random.choice(self.nn_param_choices[mutation])

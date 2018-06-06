@@ -107,7 +107,7 @@ class GA:
         model = self.genome_handler.decode(genome)
         loss, accuracy = None, None
         for i in range(epochs):
-            accuracy = model.validate(self.x_train, self.y_train)
+            accuracy = model.validate_batch(self.x_test, self.y_test, 64)
         # Record the stats
         with open(self.datafile, 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',',
