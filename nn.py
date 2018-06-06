@@ -22,36 +22,37 @@ def softmax(x):
     e = np.exp(x - m)  # prevent overflow
     return e / np.sum(e, axis=0)
 
-def sigmoid(x, derivate = False):
-    if derivate:
-        x = x * (1.0 - x)
-    else:
-        x = 1 / (1 + np.exp(-x))
-    return x
-
 def one_hot_vector(i, size):
     vector = np.zeros(size)
     vector[i] = 1
     return vector
 
-def ReLU(x, derivate = False):
-    if derivate:
-        x = 1. * (x > 0)
-        x[x == 0] = 0
-    else:
-        x = np.maximum(x, 0)
-    return x
+class Activation:
+    def sigmoid(self, x, derivate = False):
+        if derivate:
+            x = x * (1.0 - x)
+        else:
+            x = 1 / (1 + np.exp(-x))
+        return x
 
-def tanh(x, derivate = False):
-    if derivate:
-        x = 1 - np.power(x, 2)
-    else:
-        x = np.tanh(x)
-    return x
+    def ReLU(self, derivate = False):
+        if derivate:
+            x = 1. * (x > 0)
+            x[x == 0] = 0
+        else:
+            x = np.maximum(x, 0)
+        return x
+
+    def tanh(self, x, derivate = False):
+        if derivate:
+            x = 1 - np.power(x, 2)
+        else:
+            x = np.tanh(x)
+        return x
 
 class NN:
-    def __init__(self, learning_rate, activation_function, dim):
-        self.activation_function = activation_function
+    def __init__(self, activation_function, dim, learning_rate = 0.001):
+        self.activation_function = getattr(Activation(), activation_function)
         np.random.seed(0)
         self.lr = learning_rate
         self.create_classifier(dim)
@@ -63,7 +64,6 @@ class NN:
         # self.b2 = np.zeros((1, output_dim))
 
     def create_classifier(self, dims):
-        print dims
         self.params = []
         for i in range(len(dims) - 1):
             eps = sqrt(6.0/(dims[i] + dims[i+1]))
@@ -71,6 +71,9 @@ class NN:
             # W = (np.random.rand(dims[i], dims[i + 1]) - .5) * .1
             b = np.zeros(dims[i + 1])
             self.params.append([W, b])
+
+    def save(self, name):
+        pass
 
     def classifier_output(self, x, predict = False):
         for i in range(len(self.params) - 1):
@@ -150,42 +153,43 @@ def normalize(x):
     x /= 255
     return x
 
-print "Start getting the data {0}".format(passed_time(start_time))
-f = gzip.open('mnist.pkl.gz', 'rb')
-train_set, valid_set, test_set = cPickle.load(f)
-f.close()
-# import pdb; pdb.set_trace()
-# np.random.shuffle(train_set)
-# np.random.shuffle(valid_set)
+if __name__ == '__main__':
+    print "Start getting the data {0}".format(passed_time(start_time))
+    f = gzip.open('mnist.pkl.gz', 'rb')
+    train_set, valid_set, test_set = cPickle.load(f)
+    f.close()
+    # import pdb; pdb.set_trace()
+    # np.random.shuffle(train_set)
+    # np.random.shuffle(valid_set)
 
-print "Finish getting the data {0}".format(passed_time(start_time))
-lr = 0.001
-multiNN = NN(lr, ReLU, [len(train_set[0][0]), 200, 200, CLASSES])
-size_training = len(train_set[0])
-# train_x_train = normalize(train_set[0])
-# train_x_valid = normalize(train_x_valid)
-# test_x = normalize(test_x)
-print "Start training!"
-for epoch in range(EPOCHS):
-    X, Y = train_set
-    randomize = np.arange(size_training)
-    np.random.shuffle(randomize)
-    X_train = X[randomize]
-    Y_train = Y[randomize]
-    loss = 0.0
-    for i in range(0, len(Y_train), BATCH_SIZE):
-        loss += multiNN.forward_backward(X_train[i:i+BATCH_SIZE], Y_train[i:i+BATCH_SIZE])
-    print "Loss for epoch {0} is {1}".format(epoch, loss/size_training)
-    # if epoch % 10 == 0:
-    accu = multiNN.validate(valid_set[0], valid_set[1])
-    print "Accuracy after epoch {0} is {1}".format(epoch, accu)
-    print "Done in {0}".format(passed_time(start_time))
-# print "Accuracy after training is {0}".format(multiNN.validate(train_x_valid, train_y_valid))
-# print "Done learning in {0}".format(passed_time(start_time))
-# labels_test = multiNN.predict(test_x)
-# write_file = open("test.pred", "w")
-# to_write = ""
-# for label in labels_test:
-#     to_write += str(label) + "\n"
-# write_file.write(to_write)
-# write_file.close
+    print "Finish getting the data {0}".format(passed_time(start_time))
+    lr = 0.001
+    multiNN = NN('ReLU', [len(train_set[0][0]), 200, 200, CLASSES], lr)
+    size_training = len(train_set[0])
+    # train_x_train = normalize(train_set[0])
+    # train_x_valid = normalize(train_x_valid)
+    # test_x = normalize(test_x)
+    print "Start training!"
+    for epoch in range(EPOCHS):
+        X, Y = train_set
+        randomize = np.arange(size_training)
+        np.random.shuffle(randomize)
+        X_train = X[randomize]
+        Y_train = Y[randomize]
+        loss = 0.0
+        for i in range(0, len(Y_train), BATCH_SIZE):
+            loss += multiNN.forward_backward(X_train[i:i+BATCH_SIZE], Y_train[i:i+BATCH_SIZE])
+        print "Loss for epoch {0} is {1}".format(epoch, loss/size_training)
+        # if epoch % 10 == 0:
+        accu = multiNN.validate(valid_set[0], valid_set[1])
+        print "Accuracy after epoch {0} is {1}".format(epoch, accu)
+        print "Done in {0}".format(passed_time(start_time))
+    # print "Accuracy after training is {0}".format(multiNN.validate(train_x_valid, train_y_valid))
+    # print "Done learning in {0}".format(passed_time(start_time))
+    # labels_test = multiNN.predict(test_x)
+    # write_file = open("test.pred", "w")
+    # to_write = ""
+    # for label in labels_test:
+    #     to_write += str(label) + "\n"
+    # write_file.write(to_write)
+    # write_file.close

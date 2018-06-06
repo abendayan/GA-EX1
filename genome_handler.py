@@ -14,11 +14,11 @@ class GenomeHandler:
         self.network[mutation] = random.choice(self.nn_param_choices[mutation])
 
     def decode(self, genome):
-        model = NN
-        model.activation_function = genome['activation']
-        model.hidden_dim = genome['nb_neurons']
-        model.layer_size = genome['nb_layers']
-        model.batch = genome['batch']
+        dim = [784]
+        for _ in range(genome['nb_layers']):
+            dim.append(genome['nb_neurons'])
+        dim.append(10)
+        model = NN(genome['activation'], dim)
         return model
 
     # def genome_representation(self):
