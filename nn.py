@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # np.random.shuffle(valid_set)
 
     print "Finish getting the data {0}".format(passed_time(start_time))
-    lr = 0.001
+    lr = 0.005
     multiNN = NN('ReLU', [len(train_set[0][0]), 200, 200, CLASSES], lr)
     size_training = len(train_set[0])
     # train_x_train = normalize(train_set[0])

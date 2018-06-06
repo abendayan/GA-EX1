@@ -6,12 +6,15 @@ from nn import NN as NN
 class GenomeHandler:
     def __init__(self, nn_param_choices):
         self.nn_param_choices = nn_param_choices
-        self.network = {}
+        random.seed(0)
 
-    def mutate(self):
-        mutation = random.choice(list(self.nn_param_choices.keys()))
-        # Mutate one of the params.
-        self.network[mutation] = random.choice(self.nn_param_choices[mutation])
+    def mutate(self, network, num_mutations):
+        num_mutations = random.choice(range(num_mutations+1))
+        for i in range(num_mutations):
+            mutation = random.choice(list(self.nn_param_choices.keys()))
+            # Mutate one of the params.
+            network[mutation] = random.choice(self.nn_param_choices[mutation])
+        return network
 
     def decode(self, genome):
         dim = [784]
@@ -33,9 +36,10 @@ class GenomeHandler:
     #     return encoding
 
     def generate(self):
+        network = {}
         for key in self.nn_param_choices:
-            self.network[key] = random.choice(self.nn_param_choices[key])
-        return self.network
+            network[key] = random.choice(self.nn_param_choices[key])
+        return network
 
     # metric = accuracy or loss
     def best_genome(self, csv_path, metric="accuracy", include_metrics=True):

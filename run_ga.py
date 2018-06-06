@@ -7,8 +7,7 @@ import cPickle, gzip
 nn_param_choices = {
     'nb_neurons': [64, 128, 256, 512, 768, 1024],
     'nb_layers': [1, 2, 3, 4],
-    'activation': ['ReLu', 'tanh', 'sigmoid'],
-    'batch': [1, 4, 8, 12]
+    'activation': ['ReLU', 'tanh', 'sigmoid']
 }
 
 f = gzip.open('mnist.pkl.gz', 'rb')

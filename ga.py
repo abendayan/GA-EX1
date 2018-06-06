@@ -1,10 +1,10 @@
-from __future__ import print_function
+# from __future__ import print_function
 
 from genome_handler import GenomeHandler
 import numpy as np
 
 from datetime import datetime
-import random as rand
+import random
 import csv
 import operator
 import os
@@ -19,7 +19,7 @@ class GA:
         self.genome_handler = genome_handler
         self.datafile = data_path or (datetime.now().ctime() + '.csv')
         self.bssf = -1
-
+        random.seed(0)
         # if os.path.isfile(data_path) and os.stat(data_path).st_size > 1:
         #     raise ValueError(
         #         'Non-empty file %s already exists. Please change file path to prevent overwritten genome data.' % data_path)
@@ -71,6 +71,7 @@ class GA:
             res = self.evaluate(members[i], epochs)
             v = res[-1]
             del res
+            print(v)
             fit.append(v)
 
         fit = np.array(fit)
@@ -85,7 +86,7 @@ class GA:
                 members.append(self.crossover(pop.select(), pop.select()))
             members += pop.getBest(pop_size - int(pop_size * 0.95))
             for i in range(len(members)):  # Mutation
-                members[i].mutate()
+                members[i] = self.mutate(members[i], gen)
             fit = []
             for i in range(len(members)):
                 print("\nmodel {0}/{1} - generation {2}/{3}:\n"
@@ -126,8 +127,11 @@ class GA:
         return model, accuracy
 
     def crossover(self, genome1, genome2):
-        crossIndexA = rand.randint(0, len(genome1))
-        child = genome1[:crossIndexA] + genome2[crossIndexA:]
+        child = {}
+        for key in self.genome_handler.nn_param_choices:
+            child[key] = random.choice(
+                [genome1[key], genome2[key]]
+            )
         return child
 
     def mutate(self, genome, generation):
@@ -161,7 +165,7 @@ class Population:
         return [x[0] for x in combined[:n]]
 
     def select(self):
-        dart = rand.uniform(0, self.s_fit)
+        dart = random.uniform(0, self.s_fit)
         sum_fits = 0
         for i in range(len(self.members)):
             sum_fits += self.scores[i]
