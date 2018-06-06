@@ -1,4 +1,3 @@
-# Adele Bendayan 336141056
 import sys
 import numpy as np
 import cPickle, gzip
@@ -7,6 +6,7 @@ import time
 import pdb
 from random import shuffle
 from math import log, sqrt
+import pickle
 
 EPOCHS = 60
 BATCH_SIZE = 1
@@ -56,6 +56,9 @@ class NN:
         np.random.seed(0)
         self.lr = learning_rate
         self.create_classifier(dim)
+        self.nb_layers = len(dim) - 2
+        self.nb_neurons = dim[1:len(dim)-1]
+        self.activation = activation_function
         # eps = sqrt(6.0/(input_dim + hidden_dim))
         # self.W1 = (np.random.rand(input_dim, hidden_dim) - .5) * .1
         # self.b1 = np.zeros((1, hidden_dim))
@@ -73,7 +76,7 @@ class NN:
             self.params.append([W, b])
 
     def save(self, name):
-        pass
+        pickle.dump([self.nb_layers, self.nb_neurons, self.activation], open(name, "wb"))
 
     def classifier_output(self, x, predict = False):
         for i in range(len(self.params) - 1):

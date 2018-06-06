@@ -13,7 +13,11 @@ class GenomeHandler:
         for i in range(num_mutations):
             mutation = random.choice(list(self.nn_param_choices.keys()))
             # Mutate one of the params.
-            network[mutation] = random.choice(self.nn_param_choices[mutation])
+            if mutation == 'nb_neurons':
+                index = random.choice(range(network['nb_layers']))
+                network['nb_neurons'][index] = random.choice(self.nn_param_choices['nb_neurons'])
+            else:
+                network[mutation] = random.choice(self.nn_param_choices[mutation])
         return network
 
     def decode(self, genome):
