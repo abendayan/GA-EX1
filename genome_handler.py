@@ -16,6 +16,13 @@ class GenomeHandler:
             if mutation == 'nb_neurons':
                 index = random.choice(range(network['nb_layers']))
                 network['nb_neurons'][index] = random.choice(self.nn_param_choices['nb_neurons'])
+            elif mutation == 'nb_layers':
+                network[mutation] = random.choice(self.nn_param_choices[mutation])
+                if network['nb_layers'] > len(network['nb_neurons']):
+                    for _ in range(network['nb_layers'] - len(network['nb_neurons'])):
+                        network['nb_neurons'].append(random.choice(self.nn_param_choices['nb_neurons']))
+                else:
+                    network['nb_neurons'] = network['nb_neurons'][:-network['nb_layers']]
             else:
                 network[mutation] = random.choice(self.nn_param_choices[mutation])
         return network
