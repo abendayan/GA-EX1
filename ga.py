@@ -51,8 +51,6 @@ class GA:
                                       It should accept a real number including 0. If left as default just the min/max
                                       scaled values will be used.
             metric (str, optional): must be "accuracy" or "loss" , defines what to optimize during search
-        Returns:
-            keras model: best model found
         """
         self.set_objective()
         self.x_train = train_set[0]
@@ -68,9 +66,9 @@ class GA:
         for i in range(len(members)):
             print("\nmodel {0}/{1} - generation {2}/{3}:\n" \
                   .format(i + 1, len(members), 1, num_generations))
-            res = self.evaluate(members[i], epochs)
-            v = res[-1]
-            del res
+            v = self.evaluate(members[i], epochs)
+            # v = res[-1]
+            # del res
             # print(v)
             fit.append(v)
 
@@ -103,8 +101,7 @@ class GA:
 
         return self.genome_handler.load_model('best-model.h5')
 
-    def evaluate(self, genome, epochs):
-        model = self.genome_handler.decode(genome)
+    def evaluate(self, model, epochs):
         loss, accuracy = None, None
         for i in range(epochs):
             accuracy = model.validate_batch(self.x_test, self.y_test, 64)
@@ -124,7 +121,7 @@ class GA:
             self.bssf = met
             model.save('best-model.h5')
 
-        return model, accuracy
+        return accuracy
 
     def crossover(self, genome1, genome2):
         child = {}

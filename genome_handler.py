@@ -53,7 +53,7 @@ class GenomeHandler:
         network['nb_neurons'] = []
         for _ in range(network['nb_layers']):
             network['nb_neurons'].append(random.choice(self.nn_param_choices['nb_neurons']))
-        return network
+        return self.decode(network)
 
     # metric = accuracy or loss
     def best_genome(self, csv_path, metric="accuracy", include_metrics=True):
