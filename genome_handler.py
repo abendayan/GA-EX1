@@ -14,7 +14,7 @@ class GenomeHandler:
             mutation = random.choice(list(self.nn_param_choices.keys()))
             # Mutate one of the params.
             if mutation == 'nb_neurons':
-                index = random.choice(range(network['nb_layers']))
+                index = random.choice(range(len(network['nb_neurons'])))
                 network['nb_neurons'][index] = random.choice(self.nn_param_choices['nb_neurons'])
             elif mutation == 'nb_layers':
                 network[mutation] = random.choice(self.nn_param_choices[mutation])
