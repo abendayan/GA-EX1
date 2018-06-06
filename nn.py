@@ -1,5 +1,6 @@
 # Adele Bendayan 336141056
 import sys
+import numpy as np
 import cPickle, gzip
 import numpy as np
 import time
@@ -65,7 +66,9 @@ class NN:
         print dims
         self.params = []
         for i in range(len(dims) - 1):
-            W = (np.random.rand(dims[i], dims[i + 1]) - .5) * .1
+            eps = sqrt(6.0/(dims[i] + dims[i+1]))
+            W = np.random.uniform(low=-eps, high=eps, size=(dims[i], dims[i+1]))
+            # W = (np.random.rand(dims[i], dims[i + 1]) - .5) * .1
             b = np.zeros(dims[i + 1])
             self.params.append([W, b])
 
@@ -82,12 +85,14 @@ class NN:
         return probs
 
     def predict(self, x):
-        return np.argmax(self.classifier_output(x, True))
+        outputs = self.classifier_output(x)
+        return [np.argmax(output) for output in outputs]
 
     def validate(self, x, y):
         good = bad = 0.0
-        for (data, true_label) in zip(x, y):
-            if self.predict(data) == true_label:
+        labels = self.predict(x)
+        for (label, true_label) in zip(labels, y):
+            if label == true_label:
                 good += 1
             else:
                 bad += 1
@@ -139,10 +144,10 @@ def to_batch(X, Y):
     return batched_X, batched_Y
 
 def normalize(x):
-    max_x = 255
-    middle_x = 125
-    x -= middle_x
-    x /= (max_x - middle_x)
+    # max_x = 255
+    # middle_x = 125
+    # x -= middle_x
+    x /= 255
     return x
 
 print "Start getting the data {0}".format(passed_time(start_time))
@@ -154,21 +159,22 @@ f.close()
 # np.random.shuffle(valid_set)
 
 print "Finish getting the data {0}".format(passed_time(start_time))
-lr = 0.01
-multiNN = NN(lr, tanh, [len(train_set[0][0]), 200, 200, CLASSES])
+lr = 0.001
+multiNN = NN(lr, ReLU, [len(train_set[0][0]), 200, 200, CLASSES])
 size_training = len(train_set[0])
 # train_x_train = normalize(train_set[0])
 # train_x_valid = normalize(train_x_valid)
 # test_x = normalize(test_x)
 print "Start training!"
 for epoch in range(EPOCHS):
-    # randomize = np.arange(size_training)
-    # np.random.shuffle(train_set)
-    # X_train = train_x_train[randomize]
-    # Y_train = train_y_train[randomize]
+    X, Y = train_set
+    randomize = np.arange(size_training)
+    np.random.shuffle(randomize)
+    X_train = X[randomize]
+    Y_train = Y[randomize]
     loss = 0.0
-    for i in range(0, len(train_set[1]), BATCH_SIZE):
-        loss += multiNN.forward_backward(train_set[0][i:i+BATCH_SIZE], train_set[1][i:i+BATCH_SIZE])
+    for i in range(0, len(Y_train), BATCH_SIZE):
+        loss += multiNN.forward_backward(X_train[i:i+BATCH_SIZE], Y_train[i:i+BATCH_SIZE])
     print "Loss for epoch {0} is {1}".format(epoch, loss/size_training)
     # if epoch % 10 == 0:
     accu = multiNN.validate(valid_set[0], valid_set[1])
