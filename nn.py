@@ -155,7 +155,7 @@ f.close()
 
 print "Finish getting the data {0}".format(passed_time(start_time))
 lr = 0.01
-multiNN = NN(lr, ReLU, [len(train_set[0][0]), 200, 200, CLASSES])
+multiNN = NN(lr, tanh, [len(train_set[0][0]), 200, 200, CLASSES])
 size_training = len(train_set[0])
 # train_x_train = normalize(train_set[0])
 # train_x_valid = normalize(train_x_valid)
