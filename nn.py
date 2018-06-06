@@ -1,13 +1,14 @@
 # Adele Bendayan 336141056
 import sys
 import cPickle, gzip
+import numpy as np
 import time
 import pdb
 from random import shuffle
 from math import log, sqrt
 
 EPOCHS = 100
-BATCH_SIZE = 50
+BATCH_SIZE = 12
 CLASSES = 10
 
 start_time = time.time()
@@ -35,9 +36,9 @@ def one_hot_vector(i, size):
 def ReLU(x, derivate = False):
     if derivate:
         x = 1. * (x > 0)
-        x[x == 0] = 0.01
+        x[x == 0] = 0
     else:
-        x = np.maximum(x, 0.01*x)
+        x = np.maximum(x, 0)
     return x
 
 def tanh(x, derivate = False):
@@ -48,63 +49,84 @@ def tanh(x, derivate = False):
     return x
 
 class NN:
-    def __init__(self, learning_rate, activation_function, input_dim, hidden_dim, output_dim):
+    def __init__(self, learning_rate, activation_function, dim):
         self.activation_function = activation_function
         np.random.seed(0)
         self.lr = learning_rate
-        eps = sqrt(6.0/(input_dim + hidden_dim))
-        self.W1 = (np.random.rand(input_dim, hidden_dim) - .5) * .1
-        # np.random.uniform(low=-eps, high=eps, size=(input_dim, hidden_dim))
-        self.b1 = np.zeros((1, hidden_dim))
-        eps = sqrt(6.0/(output_dim + hidden_dim))
-        self.W2 = np.random.uniform(low=-eps, high=eps, size=(hidden_dim, output_dim))
-        self.b2 = np.zeros((1, output_dim))
+        self.create_classifier(dim)
+        # eps = sqrt(6.0/(input_dim + hidden_dim))
+        # self.W1 = (np.random.rand(input_dim, hidden_dim) - .5) * .1
+        # self.b1 = np.zeros((1, hidden_dim))
+        # eps = sqrt(6.0/(output_dim + hidden_dim))
+        # self.W2 = np.random.uniform(low=-eps, high=eps, size=(hidden_dim, output_dim))
+        # self.b2 = np.zeros((1, output_dim))
+
+    def create_classifier(self, dims):
+        print dims
+        self.params = []
+        for i in range(len(dims) - 1):
+            W = (np.random.rand(dims[i], dims[i + 1]) - .5) * .1
+            b = np.zeros(dims[i + 1])
+            self.params.append([W, b])
+
+    def classifier_output(self, x):
+        for i in range(len(self.params) - 1):
+            
+            W, b = self.params[i]
+            x = self.activation_function(np.dot(x, W) + b)
+        W, b = self.params[-1]
+        z2 = np.dot(x, W) + b
+        probs = np.array([softmax(z) for z in z2])
+        return probs
 
     def predict(self, x):
-        probs = self.forward(x)
-        labels = np.argmax(probs, axis=1)
-        return labels
+        return np.argmax(self.classifier_output(x))
 
     def validate(self, x, y):
-        labels = self.predict(x)
-        good = 0.0
-        bad = 0.0
-        for (label, true_label) in zip(labels, y):
-            if label == int(true_label):
+        good = bad = 0.0
+        for (data, true_label) in zip(x, y):
+            if self.predict(data) == true_label:
                 good += 1
             else:
                 bad += 1
-        return good/(good+bad)
+        return good / (good + bad)
 
-    def forward(self, x):
-        z1 = x.dot(self.W1) + self.b1
-        a1 = self.activation_function(z1)
-        z2 = a1.dot(self.W2) + self.b2
-        a2 = np.array([softmax(z) for z in z2])
-        return a2
 
-    def first_layer(self, x):
-        z1 = x.dot(self.W1) + self.b1
-        a1 = self.activation_function(z1)
-        return a1
+    def loss_and_gradients(self, x, Y):
+        U, b_tag = self.params[-1]
+
+        y_hot = np.array([one_hot_vector(int(y), U.shape[1]) for y in Y])
+        loss = 0.0
+        y_tag = self.classifier_output(x)
+        for i in range(len(x)):
+            loss -= log(y_tag[i][int(Y[i])])
+
+        gradients = []
+
+        list_z = [x]
+        list_a = [x]
+
+        for W, b in self.params:
+            list_z.append(list_z[-1].dot(W) + b)
+            list_a.append(self.activation_function(list_z[-1]))
+
+        diff = y_tag - y_hot
+        gradients.insert(0, [np.array(list_a[-2]).transpose().dot(diff), diff])
+
+        for i in (range(len(self.params) - 1))[::-1]:
+            gb = (self.params[i + 1][0].dot(gradients[0][1].T)).T * self.activation_function(list_a[i+1], True)
+            gW = np.array(list_z[i]).transpose().dot(np.array(gb))
+            gradients.insert(0, [gW, gb])
+
+        return loss, gradients
 
     def forward_backward(self, x, Y):
-        y_hot = np.array([one_hot_vector(int(y), CLASSES) for y in Y])
-        a1 = self.first_layer(x)
-        a2 = self.forward(x)
-
-        gb2 = a2 - y_hot
-        gW2 = a1.T.dot(gb2)
-        gb1 = gb2.dot(self.W2.T) * self.activation_function(a1, True)
-        gW1 = x.T.dot(gb1)
-        self.W1 -= self.lr * gW1
-        self.b1 -= self.lr * gb1.sum(axis=0)
-        self.W2 -= self.lr * gW2
-        self.b2 -= self.lr * gb2.sum(axis=0)
-        loss = 0.0
-        for i in range(len(x)):
-            loss -= log(a2[i][int(Y[i])])
-        return loss
+        loss, grads = self.loss_and_gradients(x, Y)
+        for i in range(len(self.params)):
+            self.params[i][0] -= grads[i][0] * self.lr
+            self.params[i][1] -= grads[i][1].sum(axis=0) * self.lr
+        train_loss = loss/len(x)
+        return train_loss
 
 def to_batch(X, Y):
     batched_X = []
@@ -125,48 +147,37 @@ print "Start getting the data {0}".format(passed_time(start_time))
 f = gzip.open('mnist.pkl.gz', 'rb')
 train_set, valid_set, test_set = cPickle.load(f)
 f.close()
-
-train_x = np.loadtxt("train_x")
-train_y = np.loadtxt("train_y")
-test_x = np.loadtxt("test_x")
-randomize = np.arange(len(train_x))
-np.random.shuffle(randomize)
-train_x = train_x[randomize]
-train_y = train_y[randomize]
-train_x_train = train_x[0:len(train_x)*80/100]
-train_y_train = train_y[0:len(train_y)*80/100]
-train_x_valid = train_x[len(train_x)*80/100+1:-1]
-train_y_valid = train_y[len(train_y)*80/100+1:-1]
+# import pdb; pdb.set_trace()
+# np.random.shuffle(train_set)
+# np.random.shuffle(valid_set)
 
 print "Finish getting the data {0}".format(passed_time(start_time))
 lr = 0.01
-multiNN = NN(lr, sigmoid, len(train_x_train[0]), 200, CLASSES)
-size_training = len(train_x_train)
-train_x_train = normalize(train_x_train)
-train_x_valid = normalize(train_x_valid)
-test_x = normalize(test_x)
+multiNN = NN(lr, tanh, [len(train_set[0][0]), 200, 200, CLASSES])
+size_training = len(train_set[0])
+# train_x_train = normalize(train_set[0])
+# train_x_valid = normalize(train_x_valid)
+# test_x = normalize(test_x)
 print "Start training!"
 for epoch in range(EPOCHS):
-    randomize = np.arange(size_training)
-    np.random.shuffle(randomize)
-    X_train = train_x_train[randomize]
-    Y_train = train_y_train[randomize]
+    # randomize = np.arange(size_training)
+    # np.random.shuffle(train_set)
+    # X_train = train_x_train[randomize]
+    # Y_train = train_y_train[randomize]
     loss = 0.0
-    for i in range(0, len(train_x_train), BATCH_SIZE):
-        loss += multiNN.forward_backward(X_train[i:i+BATCH_SIZE], Y_train[i:i+BATCH_SIZE])
+    for i in range(0, len(train_set[1]), BATCH_SIZE):
+        loss += multiNN.forward_backward(train_set[0][i:i+BATCH_SIZE], train_set[1][i:i+BATCH_SIZE])
     print "Loss for epoch {0} is {1}".format(epoch, loss/size_training)
     # if epoch % 10 == 0:
-    accu = multiNN.validate(train_x_valid, train_y_valid)
+    accu = multiNN.validate(valid_set[0], valid_set[1])
     print "Accuracy after epoch {0} is {1}".format(epoch, accu)
     print "Done in {0}".format(passed_time(start_time))
-    if accu > 0.9:
-        break
 # print "Accuracy after training is {0}".format(multiNN.validate(train_x_valid, train_y_valid))
 # print "Done learning in {0}".format(passed_time(start_time))
-labels_test = multiNN.predict(test_x)
-write_file = open("test.pred", "w")
-to_write = ""
-for label in labels_test:
-    to_write += str(label) + "\n"
-write_file.write(to_write)
-write_file.close
+# labels_test = multiNN.predict(test_x)
+# write_file = open("test.pred", "w")
+# to_write = ""
+# for label in labels_test:
+#     to_write += str(label) + "\n"
+# write_file.write(to_write)
+# write_file.close
