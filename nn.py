@@ -69,18 +69,20 @@ class NN:
             b = np.zeros(dims[i + 1])
             self.params.append([W, b])
 
-    def classifier_output(self, x):
+    def classifier_output(self, x, predict = False):
         for i in range(len(self.params) - 1):
-            
             W, b = self.params[i]
             x = self.activation_function(np.dot(x, W) + b)
         W, b = self.params[-1]
         z2 = np.dot(x, W) + b
-        probs = np.array([softmax(z) for z in z2])
+        if predict:
+            probs = softmax(z2)
+        else:
+            probs = np.array([softmax(z) for z in z2])
         return probs
 
     def predict(self, x):
-        return np.argmax(self.classifier_output(x))
+        return np.argmax(self.classifier_output(x, True))
 
     def validate(self, x, y):
         good = bad = 0.0
@@ -153,7 +155,7 @@ f.close()
 
 print "Finish getting the data {0}".format(passed_time(start_time))
 lr = 0.01
-multiNN = NN(lr, tanh, [len(train_set[0][0]), 200, 200, CLASSES])
+multiNN = NN(lr, ReLU, [len(train_set[0][0]), 200, 200, CLASSES])
 size_training = len(train_set[0])
 # train_x_train = normalize(train_set[0])
 # train_x_valid = normalize(train_x_valid)
