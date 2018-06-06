@@ -8,24 +8,26 @@ class GenomeHandler:
         self.nn_param_choices = nn_param_choices
         random.seed(0)
 
-    def mutate(self, network, num_mutations):
+    def mutate(self, model, num_mutations):
         num_mutations = random.choice(range(num_mutations+1))
         for i in range(num_mutations):
-            mutation = random.choice(list(self.nn_param_choices.keys()))
+            mutation = random.choice(range(model.nb_layers))
+            w, _ = model.params[mutation]
+            model.params[mutation][0] = w + 0.01*model.create_w(w.shape)
             # Mutate one of the params.
-            if mutation == 'nb_neurons':
-                index = random.choice(range(len(network['nb_neurons'])))
-                network['nb_neurons'][index] = random.choice(self.nn_param_choices['nb_neurons'])
-            elif mutation == 'nb_layers':
-                network[mutation] = random.choice(self.nn_param_choices[mutation])
-                if network['nb_layers'] > len(network['nb_neurons']):
-                    for _ in range(network['nb_layers'] - len(network['nb_neurons'])):
-                        network['nb_neurons'].append(random.choice(self.nn_param_choices['nb_neurons']))
-                elif network['nb_layers'] < len(network['nb_neurons']):
-                    network['nb_neurons'] = network['nb_neurons'][:-network['nb_layers']]
-            else:
-                network[mutation] = random.choice(self.nn_param_choices[mutation])
-        return network
+            # if mutation == 'nb_neurons':
+            #     index = random.choice(range(len(network['nb_neurons'])))
+            #     network['nb_neurons'][index] = random.choice(self.nn_param_choices['nb_neurons'])
+            # elif mutation == 'nb_layers':
+            #     network[mutation] = random.choice(self.nn_param_choices[mutation])
+            #     if network['nb_layers'] > len(network['nb_neurons']):
+            #         for _ in range(network['nb_layers'] - len(network['nb_neurons'])):
+            #             network['nb_neurons'].append(random.choice(self.nn_param_choices['nb_neurons']))
+            #     elif network['nb_layers'] < len(network['nb_neurons']):
+            #         network['nb_neurons'] = network['nb_neurons'][:-network['nb_layers']]
+            # else:
+            #     network[mutation] = random.choice(self.nn_param_choices[mutation])
+        return model
 
     def decode(self, genome):
         dim = [784]

@@ -89,9 +89,9 @@ class GA:
             for i in range(len(members)):
                 print("\nmodel {0}/{1} - generation {2}/{3}:\n"
                       .format(i + 1, len(members), gen + 1, num_generations))
-                res = self.evaluate(members[i], epochs)
-                v = res[-1]
-                del res
+                v = self.evaluate(members[i], epochs)
+                # v = res[-1]
+                # del res
                 fit.append(v)
 
             fit = np.array(fit)
@@ -106,11 +106,11 @@ class GA:
         for i in range(epochs):
             accuracy = model.validate_batch(self.x_test, self.y_test, 64)
         # Record the stats
-        with open(self.datafile, 'a') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',',
-                                quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            row = list(genome) + [accuracy]
-            writer.writerow(row)
+        # with open(self.datafile, 'a') as csvfile:
+        #     writer = csv.writer(csvfile, delimiter=',',
+        #                         quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        #     row = list(genome) + [accuracy]
+        #     writer.writerow(row)
 
         met = accuracy
         if self.bssf is -1 or self.metric_op(met, self.bssf) and accuracy is not 0:
@@ -123,18 +123,22 @@ class GA:
 
         return accuracy
 
-    def crossover(self, genome1, genome2):
-        child = {}
-        for key in self.genome_handler.nn_param_choices:
-            child[key] = random.choice(
-                [genome1[key], genome2[key]]
-            )
-        return child
+    def crossover(self, model1, model2):
+        model = random.choice([model1, model2])
+        i = 0
+        for param1, param2 in zip(model1.params, model2.params):
+            w1, _ = param1
+            w2, _ = param2
+            crossIndexA = random.randint(0, w1.shape[0])
+            childW = np.concatenate((w1[:crossIndexA], w2[crossIndexA:]), axis=0)
+            model.params[i][0] = childW
+            i += 1
+        return model
 
-    def mutate(self, genome, generation):
+    def mutate(self, model, generation):
         # increase mutations as program continues
         num_mutations = max(3, generation // 4)
-        return self.genome_handler.mutate(genome, num_mutations)
+        return self.genome_handler.mutate(model, num_mutations)
 
 
 class Population:

@@ -69,11 +69,14 @@ class NN:
     def create_classifier(self, dims):
         self.params = []
         for i in range(len(dims) - 1):
-            eps = sqrt(6.0/(dims[i] + dims[i+1]))
-            W = np.random.uniform(low=-eps, high=eps, size=(dims[i], dims[i+1]))
+            W = self.create_w((dims[i], dims[i+1]))
             # W = (np.random.rand(dims[i], dims[i + 1]) - .5) * .1
             b = np.zeros(dims[i + 1])
             self.params.append([W, b])
+
+    def create_w(self, dims):
+        eps = sqrt(6.0/(dims[0] + dims[1]))
+        return np.random.uniform(low=-eps, high=eps, size=(dims[0], dims[1]))
 
     def save(self, name):
         pickle.dump([self.nb_layers, self.nb_neurons, self.activation], open(name, "wb"))

@@ -5,9 +5,9 @@ from ga import GA
 import cPickle, gzip
 
 nn_param_choices = {
-    'nb_neurons': [64, 128, 256, 512, 768, 1024],
-    'nb_layers': [1, 2, 3, 4],
-    'activation': ['ReLU', 'tanh', 'sigmoid']
+    'nb_neurons': [256],
+    'nb_layers': [2],
+    'activation': ['ReLU']
 }
 
 f = gzip.open('mnist.pkl.gz', 'rb')
