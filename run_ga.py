@@ -6,9 +6,9 @@ import cPickle, gzip
 import numpy as np
 
 nn_param_choices = {
-    'nb_neurons': [128, 256],
-    'nb_layers': [2],
-    'activation': ['ReLU', 'tanh']
+    'nb_neurons': [256, 128],
+    'nb_layers': 2,
+    'activation': 'tanh'
 }
 
 f = gzip.open('mnist.pkl.gz', 'rb')
@@ -18,7 +18,7 @@ print(np.all(train_set ==0))
 genome_handler_lo = GenomeHandler(nn_param_choices)
 
 num_generations = 1000
-population_size = 50
+population_size = 100
 num_epochs = 1
 
 ga = GA(genome_handler_lo, 'genomes.csv')

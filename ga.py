@@ -32,8 +32,8 @@ class GA:
 
     def set_objective(self):
         """set the metric and objective for this search  should be 'accuracy' or 'loss'"""
-        self.metric = 'accuracy'
-        self.objective = "max"
+        self.metric = 'loss'
+        self.objective = "min"
         self.metric_index = -1
         self.metric_op = METRIC_OPS[self.objective is 'max']
         self.metric_objective = METRIC_OBJECTIVES[self.objective is 'max']
@@ -63,49 +63,51 @@ class GA:
         members = [self.genome_handler.generate() for _ in range(pop_size)]
         fit = []
         metric_index = 1 if self.metric is 'loss' else -1
+        acc = []
         for i in range(len(members)):
             # print("\nmodel {}/{} - generation {}/{}\n"
             #       .format(i + 1, len(members), 1, num_generations))
-            v = self.evaluate(members[i], epochs)
+            v, loss = self.evaluate(members[i], epochs)
             # v = res[-1]
             # del res
             # print(v)
-            fit.append(v)
+            fit.append(loss)
+            acc.append(v)
 
         fit = np.array(fit)
         pop = Population(members, fit, fitness, obj=self.objective)
-        print("First Generation: best {}: {:0.4f}% average: {:0.4f}"
-              .format(self.metric, 100.0*self.metric_objective(fit), np.mean(fit)))
-
+        print("First Generation: best accuracy: {:0.4f}% best loss: {:0.4f}"
+              .format(100.0*np.array(acc).max(), self.metric_objective(fit)))
         # Evolve over
         for gen in range(1, num_generations):
             members = []
-            for i in range(int(pop_size * 0.95)):  # Crossover
+            for i in range(int(pop_size * 0.65)):  # Crossover
                 members.append(self.crossover(pop.select(), pop.select()))
-            members += pop.getBest(pop_size - int(pop_size * 0.95))
+            members += pop.getBest(pop_size - int(pop_size * 0.65))
             for i in range(len(members)):  # Mutation
                 members[i] = self.mutate(members[i], gen)
             fit = []
+            acc = []
             for i in range(len(members)):
                 # print("\nmodel {0}/{1} - generation {2}/{3}:\n"
                 #       .format(i + 1, len(members), gen + 1, num_generations))
-                v = self.evaluate(members[i], epochs)
+                v, loss = self.evaluate(members[i], epochs)
                 # v = res[-1]
                 # del res
-                fit.append(v)
+                fit.append(loss)
+                acc.append(v)
 
             fit = np.array(fit)
             pop = Population(members, fit, fitness, obj=self.objective)
-            print("Generation {}: best {}: {:0.4f}% average: {:0.4f}"
-                  .format(gen + 1, self.metric, 100.0*self.metric_objective(fit), np.mean(fit)))
-
+            print("Generation {}: best accuracy: {:0.4f}% best loss: {:0.4f}"
+                  .format(gen + 1, 100.0*np.array(acc).max(), self.metric_objective(fit)))
         return self.genome_handler.load_model('best-model.h5')
 
     def evaluate(self, model, epochs):
         loss, accuracy = None, None
         for i in range(epochs):
             x_part, y_part = self.get_partial_train()
-            accuracy = model.validate_batch(x_part, y_part, 64)
+            accuracy, loss = model.validate_batch(x_part, y_part, 64)
         # Record the stats
         # with open(self.datafile, 'a') as csvfile:
         #     writer = csv.writer(csvfile, delimiter=',',
@@ -113,8 +115,8 @@ class GA:
         #     row = list(genome) + [accuracy]
         #     writer.writerow(row)
 
-        met = accuracy
-        if self.bssf is -1 or self.metric_op(met, self.bssf) and accuracy is not 0:
+        met = loss
+        if self.bssf is -1 or self.metric_op(met, self.bssf) and loss is not 0:
             try:
                 os.remove('best-model.h5')
             except OSError:
@@ -122,17 +124,25 @@ class GA:
             self.bssf = met
             model.save('best-model.h5')
 
-        return accuracy
+        return accuracy, loss
 
     def crossover(self, model1, model2):
         model = random.choice([model1, model2])
         i = 0
         for param1, param2 in zip(model1.params, model2.params):
-            w1, _ = param1
-            w2, _ = param2
-            crossIndexA = random.randint(0, w1.shape[0])
-            childW = np.concatenate((w1[:crossIndexA], w2[crossIndexA:]), axis=0)
-            model.params[i][0] = childW
+            w1, b1 = param1
+            w2, b2 = param2
+            b_or_w = random.choice((0, 1))
+            if b_or_w:
+                childW = random.choice((w1[:1], w2[:1]))
+                for column in range(1, w1.shape[0]):
+                    childW = np.concatenate((childW, random.choice((w1[column-1:column], w2[column-1:column]))))
+                model.params[i][0] = childW
+            else:
+                childB = random.choice((b1[:1], b2[:1]))
+                for j in range(1, b1.shape[0]):
+                    childB = np.concatenate((childB, random.choice((b1[j-1:j], b2[j-1:j]))))
+                model.params[i][1] = childB
             i += 1
         return model
 
@@ -155,8 +165,8 @@ class Population:
     def __init__(self, members, fitnesses, score, obj='max'):
         self.members = members
         scores = fitnesses - fitnesses.min()
-        if scores.max() > 0:
-            scores /= scores.max()
+        # if scores.max() > 0:
+        #     scores /= scores.max()
         if obj is 'min':
             scores = 1 - scores
         if score:
@@ -178,3 +188,4 @@ class Population:
             sum_fits += self.scores[i]
             if sum_fits >= dart:
                 return self.members[i]
+        import pdb; pdb.set_trace()

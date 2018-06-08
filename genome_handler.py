@@ -2,6 +2,7 @@ import numpy as np
 import random
 from nn import NN as NN
 import pickle
+from math import sqrt
 
 class GenomeHandler:
     def __init__(self, nn_param_choices):
@@ -10,10 +11,17 @@ class GenomeHandler:
 
     def mutate(self, model, num_mutations):
         num_mutations = random.choice(range(num_mutations+1))
-        for i in range(num_mutations):
-            mutation = random.choice(range(model.nb_layers))
-            w, _ = model.params[mutation]
-            model.params[mutation][0] = w + 0.01*model.create_w(w.shape)
+        for j in range(num_mutations):
+            for i in range(model.nb_layers):
+                W, b = model.params[i]
+                eps = sqrt(6.0/(W.shape[0] + W.shape[1]))
+                eps1 = sqrt(6.0/(b.shape[0]))
+                model.params[i][0] -= 0.005*np.random.uniform(low=-eps, high=eps, size=W.shape)
+                # import pdb; pdb.set_trace()
+                # divide = max(model.params[i][0].max(), abs(model.params[i][0].min()))
+                # model.params[i][0] /= divide
+                # model.params[i][0] = W + 0.001*np.random.uniform(low=-eps, high=eps, size=W.shape)
+                model.params[i][1] -= 0.005*np.random.uniform(low=-eps, high=eps, size=b.shape)
             # Mutate one of the params.
             # if mutation == 'nb_neurons':
             #     index = random.choice(range(len(network['nb_neurons'])))
@@ -51,10 +59,10 @@ class GenomeHandler:
     def generate(self):
         network = {}
         for key in self.nn_param_choices:
-            network[key] = random.choice(self.nn_param_choices[key])
+            network[key] = self.nn_param_choices[key]
         network['nb_neurons'] = []
-        for _ in range(network['nb_layers']):
-            network['nb_neurons'].append(random.choice(self.nn_param_choices['nb_neurons']))
+        for i in range(network['nb_layers']):
+            network['nb_neurons'].append(self.nn_param_choices['nb_neurons'][i])
         return self.decode(network)
 
     # metric = accuracy or loss

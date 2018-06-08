@@ -9,7 +9,7 @@ from math import log, sqrt
 import pickle
 
 EPOCHS = 60
-BATCH_SIZE = 1
+BATCH_SIZE = 64
 CLASSES = 10
 
 start_time = time.time()
@@ -95,7 +95,7 @@ class NN:
 
     def predict(self, x):
         outputs = self.classifier_output(x)
-        return [np.argmax(output) for output in outputs]
+        return [np.argmax(output) for output in outputs], outputs
 
     def validate(self, x, y):
         good = bad = 0.0
@@ -109,16 +109,22 @@ class NN:
 
     def validate_batch(self, x, y, batch_size):
         good = bad = 0.0
+        loss = 0.0
         for i in range(0, len(y), batch_size):
             x_batch = x[i:i+batch_size]
             y_batch = y[i:i+batch_size]
-            labels = self.predict(x_batch)
+            labels, outputs = self.predict(x_batch)
+            for (output, label) in zip(outputs, y_batch):
+                if output[label] > 0:
+                    loss -= log(output[label])
+                else:
+                    loss = float("inf")
             for (label, true_label) in zip(labels, y_batch):
                 if label == true_label:
                     good += 1
                 else:
                     bad += 1
-        return good / (good + bad)
+        return (good / (good + bad)), loss/len(y)
 
     def loss_and_gradients(self, x, Y):
         U, b_tag = self.params[-1]
