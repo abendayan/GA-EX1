@@ -3,17 +3,18 @@
 from genome_handler import GenomeHandler
 from ga import GA
 import cPickle, gzip
+import numpy as np
 
 nn_param_choices = {
-    'nb_neurons': [256],
+    'nb_neurons': [128, 256],
     'nb_layers': [2],
-    'activation': ['ReLU']
+    'activation': ['ReLU', 'tanh']
 }
 
 f = gzip.open('mnist.pkl.gz', 'rb')
 train_set, valid_set, test_set = cPickle.load(f)
 f.close()
-
+print(np.all(train_set ==0))
 genome_handler_lo = GenomeHandler(nn_param_choices)
 
 num_generations = 1000

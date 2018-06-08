@@ -64,8 +64,8 @@ class GA:
         fit = []
         metric_index = 1 if self.metric is 'loss' else -1
         for i in range(len(members)):
-            print("\nmodel {0}/{1} - generation {2}/{3}:\n" \
-                  .format(i + 1, len(members), 1, num_generations))
+            # print("\nmodel {}/{} - generation {}/{}\n"
+            #       .format(i + 1, len(members), 1, num_generations))
             v = self.evaluate(members[i], epochs)
             # v = res[-1]
             # del res
@@ -74,8 +74,8 @@ class GA:
 
         fit = np.array(fit)
         pop = Population(members, fit, fitness, obj=self.objective)
-        print("Generation {3}:\t\tbest {4}: {0:0.4f}\t\taverage: {1:0.4f}\t\tstd: {2:0.4f}" \
-              .format(self.metric_objective(fit), np.mean(fit), np.std(fit), 1, self.metric))
+        print("First Generation: best {}: {:0.4f}% average: {:0.4f}"
+              .format(self.metric, 100.0*self.metric_objective(fit), np.mean(fit)))
 
         # Evolve over
         for gen in range(1, num_generations):
@@ -87,8 +87,8 @@ class GA:
                 members[i] = self.mutate(members[i], gen)
             fit = []
             for i in range(len(members)):
-                print("\nmodel {0}/{1} - generation {2}/{3}:\n"
-                      .format(i + 1, len(members), gen + 1, num_generations))
+                # print("\nmodel {0}/{1} - generation {2}/{3}:\n"
+                #       .format(i + 1, len(members), gen + 1, num_generations))
                 v = self.evaluate(members[i], epochs)
                 # v = res[-1]
                 # del res
@@ -96,15 +96,16 @@ class GA:
 
             fit = np.array(fit)
             pop = Population(members, fit, fitness, obj=self.objective)
-            print("Generation {3}:\t\tbest {4}: {0:0.4f}\t\taverage: {1:0.4f}\t\tstd: {2:0.4f}" \
-                  .format(self.metric_objective(fit), np.mean(fit), np.std(fit), gen + 1, self.metric))
+            print("Generation {}: best {}: {:0.4f}% average: {:0.4f}"
+                  .format(gen + 1, self.metric, 100.0*self.metric_objective(fit), np.mean(fit)))
 
         return self.genome_handler.load_model('best-model.h5')
 
     def evaluate(self, model, epochs):
         loss, accuracy = None, None
         for i in range(epochs):
-            accuracy = model.validate_batch(self.x_test, self.y_test, 64)
+            x_part, y_part = self.get_partial_train()
+            accuracy = model.validate_batch(x_part, y_part, 64)
         # Record the stats
         # with open(self.datafile, 'a') as csvfile:
         #     writer = csv.writer(csvfile, delimiter=',',
@@ -140,6 +141,11 @@ class GA:
         num_mutations = max(3, generation // 4)
         return self.genome_handler.mutate(model, num_mutations)
 
+    def get_partial_train(self):
+        my_randoms = random.sample(xrange(50000), 128)
+        x_partial = [self.x_train[i] for i in my_randoms]
+        y_partial = [self.y_train[i] for i in my_randoms]
+        return x_partial, y_partial
 
 class Population:
 
