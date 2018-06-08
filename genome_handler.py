@@ -11,17 +11,23 @@ class GenomeHandler:
 
     def mutate(self, model, num_mutations):
         num_mutations = random.choice(range(num_mutations+1))
-        for j in range(num_mutations):
-            for i in range(model.nb_layers):
-                W, b = model.params[i]
-                eps = sqrt(6.0/(W.shape[0] + W.shape[1]))
-                eps1 = sqrt(6.0/(b.shape[0]))
-                model.params[i][0] -= 0.005*np.random.uniform(low=-eps, high=eps, size=W.shape)
-                # import pdb; pdb.set_trace()
+        # for j in range(num_mutations):
+        for i in range(model.nb_layers):
+            W, b = model.params[i]
+            eps = sqrt(6.0/(W.shape[0] + W.shape[1]))
+            eps1 = sqrt(6.0/(b.shape[0]))
+            b_or_w = random.choice((0, 1))
+            if b_or_w:
+                x = np.random.randint(W.shape[0])
+                model.params[i][0][x-1:x] += 0.005*np.random.normal(0, eps, size = (1,W.shape[1]))
                 # divide = max(model.params[i][0].max(), abs(model.params[i][0].min()))
                 # model.params[i][0] /= divide
-                # model.params[i][0] = W + 0.001*np.random.uniform(low=-eps, high=eps, size=W.shape)
-                model.params[i][1] -= 0.005*np.random.uniform(low=-eps, high=eps, size=b.shape)
+                # model.params[i][0] * eps
+            else:
+                model.params[i][1] += 0.005*np.random.normal(0, eps1, size=b.shape)
+                divide = max(model.params[i][1].max(), abs(model.params[i][1].min()))
+                model.params[i][1] /= divide
+                model.params[i][1] * eps1
             # Mutate one of the params.
             # if mutation == 'nb_neurons':
             #     index = random.choice(range(len(network['nb_neurons'])))

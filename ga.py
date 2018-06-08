@@ -81,9 +81,9 @@ class GA:
         # Evolve over
         for gen in range(1, num_generations):
             members = []
-            for i in range(int(pop_size * 0.65)):  # Crossover
+            for i in range(int(pop_size * 0.95)):  # Crossover
                 members.append(self.crossover(pop.select(), pop.select()))
-            members += pop.getBest(pop_size - int(pop_size * 0.65))
+            members += pop.getBest(pop_size - int(pop_size * 0.95))
             for i in range(len(members)):  # Mutation
                 members[i] = self.mutate(members[i], gen)
             fit = []
@@ -133,16 +133,16 @@ class GA:
             w1, b1 = param1
             w2, b2 = param2
             b_or_w = random.choice((0, 1))
-            if b_or_w:
-                childW = random.choice((w1[:1], w2[:1]))
-                for column in range(1, w1.shape[0]):
-                    childW = np.concatenate((childW, random.choice((w1[column-1:column], w2[column-1:column]))))
-                model.params[i][0] = childW
-            else:
-                childB = random.choice((b1[:1], b2[:1]))
-                for j in range(1, b1.shape[0]):
-                    childB = np.concatenate((childB, random.choice((b1[j-1:j], b2[j-1:j]))))
-                model.params[i][1] = childB
+        # if b_or_w:
+            childW = random.choice((w1[:1], w2[:1]))
+            for column in range(1, w1.shape[0]):
+                childW = np.concatenate((childW, random.choice((w1[column-1:column], w2[column-1:column]))))
+            model.params[i][0] = childW
+        # else:
+            childB = random.choice((b1[:1], b2[:1]))
+            for j in range(1, b1.shape[0]):
+                childB = np.concatenate((childB, random.choice((b1[j-1:j], b2[j-1:j]))))
+            model.params[i][1] = childB
             i += 1
         return model
 
