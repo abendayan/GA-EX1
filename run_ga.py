@@ -6,7 +6,7 @@ import cPickle, gzip
 import numpy as np
 
 nn_param_choices = {
-    'nb_neurons': [256, 256],
+    'nb_neurons': [128, 64],
     'nb_layers': 2,
     'activation': 'tanh'
 }

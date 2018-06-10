@@ -53,7 +53,6 @@ class Activation:
 class NN:
     def __init__(self, activation_function, dim, learning_rate = 0.001):
         self.activation_function = getattr(Activation(), activation_function)
-        np.random.seed(0)
         self.lr = learning_rate
         self.create_classifier(dim)
         self.nb_layers = len(dim) - 2
@@ -76,6 +75,7 @@ class NN:
 
     def create_w(self, dims):
         eps = sqrt(6.0/(dims[0] + dims[1]))
+        # return np.random.randn(dims[0], dims[1])/(np.sqrt(dims[0]))
         return np.random.uniform(low=-eps, high=eps, size=(dims[0], dims[1]))
 
     def save(self, name):
@@ -124,7 +124,7 @@ class NN:
                     good += 1
                 else:
                     bad += 1
-        return (good / (good + bad)), loss/len(y)
+        return (good / (good + bad)), loss
 
     def loss_and_gradients(self, x, Y):
         U, b_tag = self.params[-1]
