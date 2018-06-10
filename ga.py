@@ -87,7 +87,7 @@ class GA:
             # keep 25% of the best
             bests = pop.getBest(int(pop_size * 0.25))
             members += bests
-            print self.evaluate(members[0])
+            # print self.evaluate(members[0])
             # members += pop.getWorst(int(pop_size * 0.05))
             worsts = pop.getWorst(int(pop_size * 0.75))
             while len(members) < pop_size:
