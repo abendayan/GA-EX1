@@ -42,17 +42,17 @@ class GenomeHandler:
         return self.decode(network)
 
     # metric = accuracy or loss
-    @staticmethod
-    def best_genome(csv_path, metric="accuracy", include_metrics=True):
-        best = max if metric is "accuracy" else min
-        col = -1 if metric is "accuracy" else -2
-        data = np.genfromtxt(csv_path, delimiter=",")
-        row = list(data[:, col]).index(best(data[:, col]))
-        genome = list(map(int, data[row, :-2]))
-        if include_metrics:
-            genome += list(data[row, -2:])
-        return genome
-
-    @staticmethod
-    def load_model(models_file):
-        return pickle.load(open(models_file))
+    # @staticmethod
+    # def best_genome(csv_path, metric="accuracy", include_metrics=True):
+    #     best = max if metric is "accuracy" else min
+    #     col = -1 if metric is "accuracy" else -2
+    #     data = np.genfromtxt(csv_path, delimiter=",")
+    #     row = list(data[:, col]).index(best(data[:, col]))
+    #     genome = list(map(int, data[row, :-2]))
+    #     if include_metrics:
+    #         genome += list(data[row, -2:])
+    #     return genome
+    #
+    # @staticmethod
+    # def load_model(models_file):
+    #     return pickle.load(open(models_file))

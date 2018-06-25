@@ -9,8 +9,8 @@ import sys
 import argparse
 import os
 
-EPOCHS = 30
-BATCH_SIZE = 50
+EPOCHS = 60
+BATCH_SIZE = 1
 CLASSES = 10
 
 start_time = time.time()
@@ -201,15 +201,15 @@ if __name__ == '__main__':
     np.random.shuffle(randomize)
     train_image = train_image[randomize]
     train_labels = train_labels[randomize]
-    valid_image = train_image[len(train_image)*80/100-1:-1]
-    valid_labels = train_labels[len(train_labels)*80/100-1:-1]
-    train_image = train_image[0:len(train_image)*80/100]
-    train_labels = train_labels[0:len(train_labels)*80/100]
+    valid_image = train_image[:10000]
+    valid_labels = train_labels[:10000]
+    train_image = train_image[10000-1:-1]
+    train_labels = train_labels[10000-1:-1]
 
 
     test_image, test_labels = mndata.load(os.path.join('data/', result.images), os.path.join('data/', result.labels))
-    test_labels = np.array(test_labels)
-    test_image = normalize(np.array(test_image))
+    test_labels = normalize(np.array(test_labels))
+    test_image = np.array(test_image)
 
     print "Finish getting the data {0}".format(passed_time(start_time))
     lr = 0.001
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     if use_model:
         multiNN = load_model(result.model)
     else:
-        multiNN = NN('ReLU', [len(train_image[0]), 200, 200, CLASSES], lr)
+        multiNN = NN('ReLU', [len(train_image[0]), 200, 100, CLASSES], lr)
         size_training = len(train_image)
         print "Start training!"
         for epoch in range(EPOCHS):
