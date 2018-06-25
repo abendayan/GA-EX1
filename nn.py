@@ -4,9 +4,13 @@ import numpy as np
 import time
 from math import log, sqrt
 import pickle
+from mnist import MNIST
+import sys
+import argparse
+import os
 
-EPOCHS = 60
-BATCH_SIZE = 64
+EPOCHS = 30
+BATCH_SIZE = 50
 CLASSES = 10
 
 start_time = time.time()
@@ -76,7 +80,8 @@ class NN:
         return np.random.uniform(low=-eps, high=eps, size=(dims[0], dims[1]))
 
     def save(self, name):
-        pickle.dump([self.nb_layers, self.nb_neurons, self.activation], open(name, "wb"))
+        dim = [784] + self.nb_neurons
+        pickle.dump((self.params, [self.activation, dim, self.lr]), open(name, "wb"))
 
     def classifier_output(self, x, predict=False):
         for i in range(len(self.params) - 1):
@@ -96,7 +101,7 @@ class NN:
 
     def validate(self, x, y):
         good = bad = 0.0
-        labels = self.predict(x)
+        labels = self.predict(x)[0]
         for (label, true_label) in zip(labels, y):
             if label == true_label:
                 good += 1
@@ -126,7 +131,7 @@ class NN:
     def loss_and_gradients(self, x, y):
         u, b_tag = self.params[-1]
 
-        y_hot = np.array([one_hot_vector(int(y), u.shape[1]) for y in y])
+        y_hot = np.array([one_hot_vector(int(Y), u.shape[1]) for Y in y])
         loss = 0.0
         y_tag = self.classifier_output(x)
         for i in range(len(x)):
@@ -170,31 +175,73 @@ def to_batch(x, y):
 
 
 def normalize(x):
-    x /= 255
-    return x
+    return x.astype(np.float)/255.0
 
+def load_model(name):
+    params, args = pickle.load(open(name,'r'))
+    act, dim, lr = args
+    model = NN(act, dim, lr)
+    model.params = params
+    return model
 
 if __name__ == '__main__':
     print "Start getting the data {0}".format(passed_time(start_time))
-    f = gzip.open('mnist.pkl.gz', 'rb')
-    train_set, valid_set, test_set = cPickle.load(f)
-    f.close()
+    parser = argparse.ArgumentParser(description='Backpropagation')
+
+    parser.add_argument('-model', default='None')
+    parser.add_argument('-images', default='t10k-images-idx3-ubyte')
+    parser.add_argument('-labels', default='t10k-labels-idx1-ubyte')
+    result = parser.parse_args()
+
+    mndata = MNIST('data/', return_type="numpy")
+    mndata.gz = True
+    train_image, train_labels = mndata.load_training()
+    train_image = normalize(train_image)
+    randomize = np.arange(len(train_image))
+    np.random.shuffle(randomize)
+    train_image = train_image[randomize]
+    train_labels = train_labels[randomize]
+    valid_image = train_image[len(train_image)*80/100-1:-1]
+    valid_labels = train_labels[len(train_labels)*80/100-1:-1]
+    train_image = train_image[0:len(train_image)*80/100]
+    train_labels = train_labels[0:len(train_labels)*80/100]
+
+
+    test_image, test_labels = mndata.load(os.path.join('data/', result.images), os.path.join('data/', result.labels))
+    test_labels = np.array(test_labels)
+    test_image = normalize(np.array(test_image))
 
     print "Finish getting the data {0}".format(passed_time(start_time))
-    lr = 0.005
-    multiNN = NN('ReLU', [len(train_set[0][0]), 200, 200, CLASSES], lr)
-    size_training = len(train_set[0])
-    print "Start training!"
-    for epoch in range(EPOCHS):
-        X, Y = train_set
-        randomize = np.arange(size_training)
-        np.random.shuffle(randomize)
-        X_train = X[randomize]
-        Y_train = Y[randomize]
-        loss = 0.0
-        for i in range(0, len(Y_train), BATCH_SIZE):
-            loss += multiNN.forward_backward(X_train[i:i + BATCH_SIZE], Y_train[i:i + BATCH_SIZE])
-        print "Loss for epoch {0} is {1}".format(epoch, loss / size_training)
-        accu = multiNN.validate(valid_set[0], valid_set[1])
-        print "Accuracy after epoch {0} is {1}".format(epoch, accu)
-        print "Done in {0}".format(passed_time(start_time))
+    lr = 0.001
+    use_model = not result.model == 'None'
+    if use_model:
+        model_name = sys.argv[1]
+        multiNN = load_model(model_name)
+    else:
+        multiNN = NN('ReLU', [len(train_image[0]), 200, 200, CLASSES], lr)
+        size_training = len(train_image)
+        print "Start training!"
+        for epoch in range(EPOCHS):
+            randomize = np.arange(size_training)
+            np.random.shuffle(randomize)
+            X_train = train_image[randomize]
+            Y_train = train_labels[randomize]
+            loss = 0.0
+            for i in range(0, len(Y_train), BATCH_SIZE):
+                loss += multiNN.forward_backward(X_train[i:i + BATCH_SIZE], Y_train[i:i + BATCH_SIZE])
+            print "Loss for epoch {0} is {1}".format(epoch, loss / size_training)
+            accu = multiNN.validate_batch(valid_image, valid_labels, 64)[0]
+            print "Accuracy after epoch {0} is {1}".format(epoch, accu)
+            print "Done in {0}".format(passed_time(start_time))
+
+    accu = multiNN.validate_batch(test_image, test_labels, 64)[0]
+    print "Test accuracy is {0}".format(accu)
+    labels_test = multiNN.predict(test_image)[0]
+    write_file = open("test_nn.pred", "w")
+    to_write = ""
+    for label in labels_test:
+        to_write += str(label) + "\n"
+    write_file.write(to_write)
+    write_file.close
+    if not use_model:
+        multiNN.save("model_from_nn.model")
