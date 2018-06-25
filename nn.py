@@ -215,8 +215,7 @@ if __name__ == '__main__':
     lr = 0.001
     use_model = not result.model == 'None'
     if use_model:
-        model_name = sys.argv[1]
-        multiNN = load_model(model_name)
+        multiNN = load_model(result.model)
     else:
         multiNN = NN('ReLU', [len(train_image[0]), 200, 200, CLASSES], lr)
         size_training = len(train_image)
