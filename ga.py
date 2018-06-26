@@ -24,8 +24,8 @@ class GA:
         self.bssf = -1
         self.mutate_chance = 0.05
         self.keep = 0.15
-        self.partial = 50
         random.seed(0)
+        self.my_randoms = random.sample(xrange(50000), 50)
 
     def run(self, train_set, valid_set, test_set, num_generations, pop_size, fitness=None):
 
@@ -51,6 +51,7 @@ class GA:
         # print fit
         print("First Generation: best loss: {:0.4f} , best accuracy: {:0.4f}%"
               .format(self.metric_objective(fit), 100.0*max(acc)))
+        best_loss = min(fit)
         # Evolve over
         for gen in range(1, num_generations):
             members = []
@@ -77,9 +78,15 @@ class GA:
             print("Generation {}: best loss: {:0.4f}, best accuracy: {:0.4f}%"
                   .format(gen + 1, self.metric_objective(fit), 100.0*max(acc)))
             if (gen+1) % 100 == 0:
-                self.partial += 50
+                if min(fit) < best_loss:
+                    self.my_randoms += random.sample(xrange(50000), 50)
+                    self.my_randoms = list(set(self.my_randoms))
+                best_loss = min(fit)
+                print len(self.my_randoms)
                 print("Best accuracy: {:0.4f}%"
                       .format(100.0*max(acc)))
+        best = pop.get_best(1)[0]
+        best.save("model_from_ga.model")
 
     @staticmethod
     def evaluate(model, x_part, y_part):
@@ -102,9 +109,9 @@ class GA:
         return model
 
     def get_partial_train(self):
-        my_randoms = random.sample(xrange(50000), self.partial)
-        x_partial = [self.x_train[i] for i in my_randoms]
-        y_partial = [self.y_train[i] for i in my_randoms]
+        # my_randoms = random.sample(xrange(50000), self.partial)
+        x_partial = [self.x_train[i] for i in self.my_randoms]
+        y_partial = [self.y_train[i] for i in self.my_randoms]
         return x_partial, y_partial
 
 

@@ -9,7 +9,7 @@ import sys
 import argparse
 import os
 
-EPOCHS = 60
+EPOCHS = 30
 BATCH_SIZE = 1
 CLASSES = 10
 
@@ -208,8 +208,8 @@ if __name__ == '__main__':
 
 
     test_image, test_labels = mndata.load(os.path.join('data/', result.images), os.path.join('data/', result.labels))
-    test_labels = normalize(np.array(test_labels))
-    test_image = np.array(test_image)
+    test_image = normalize(np.array(test_image))
+    test_labels = np.array(test_labels)
 
     print "Finish getting the data {0}".format(passed_time(start_time))
     lr = 0.001
