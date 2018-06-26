@@ -11,15 +11,17 @@ class GenomeHandler:
         np.random.seed(0)
 
     @staticmethod
-    def mutate(model):
-        for i in range(model.nb_layers):
-            w, b = model.params[i]
-            for column in range(1, model.params[i][0].shape[0]+1):
-                if random.random() < 0.05:
-                    model.params[i][0][column-1:column] += np.random.randn(1, w.shape[1]) / (np.sqrt(w.shape[0]))
-            for j in range(b.shape[0]):
-                if random.random() < 0.05:
-                    model.params[i][1][j] += np.random.randn()/(np.sqrt(b.shape[0]))
+    def mutate(model, num_mutation):
+        num_mutation = random.randrange(1, num_mutation+1)
+        for _ in range(num_mutation):
+            for i in range(model.nb_layers):
+                w, b = model.params[i]
+                for column in range(1, model.params[i][0].shape[0]+1):
+                    if random.uniform(0, 1) < 0.01:
+                        model.params[i][0][column-1:column] += np.random.normal(scale = 0.0081, size=(1, w.shape[1]))
+                for j in range(b.shape[0]):
+                    if random.uniform(0, 1) < 0.01:
+                        model.params[i][1][j] += np.random.normal(scale = 0.0081)
         return model
 
     @staticmethod

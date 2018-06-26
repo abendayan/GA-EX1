@@ -63,8 +63,8 @@ class GA:
                 index1 = np.random.randint(len(bests))
                 index2 = np.random.randint(len(worsts))
                 members.append(self.crossover(bests[index1], worsts[index2]))
-            for i in range(5, len(members)):
-                members[i] = self.genome_handler.mutate(members[i])
+            for i in range(1, len(members)):
+                members[i] = self.genome_handler.mutate(members[i], max(1, gen//4))
             fit = []
             acc = []
             x_part, y_part = self.get_partial_train()
@@ -75,16 +75,15 @@ class GA:
 
             fit = np.array(fit)
             pop = Population(members, fit, fitness, obj=self.objective)
-            print("Generation {}: best loss: {:0.4f}, best accuracy: {:0.4f}%"
-                  .format(gen + 1, self.metric_objective(fit), 100.0*max(acc)))
+            print("Generation {}: best loss: {:0.4f}, best accuracy: {:0.4f}%".format(gen + 1, self.metric_objective(fit), 100.0*max(acc)))
             if (gen+1) % 100 == 0:
                 if min(fit) < best_loss:
                     self.my_randoms += random.sample(xrange(50000), 50)
                     self.my_randoms = list(set(self.my_randoms))
                 best_loss = min(fit)
                 print len(self.my_randoms)
-                print("Best accuracy: {:0.4f}%"
-                      .format(100.0*max(acc)))
+                best_model_acc, best_model_loss = self.evaluate(members[0], self.x_valid, self.y_valid)
+                print("Best loss on valid: {:0.4f}, best accuracy on valid: {:0.4f}%".format(best_model_loss, 100.0*best_model_acc))
         best = pop.get_best(1)[0]
         best.save("model_from_ga.model")
 

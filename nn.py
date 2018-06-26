@@ -7,7 +7,7 @@ import pickle
 from mnist import MNIST
 import sys
 import argparse
-import os
+from loader import load_data
 
 EPOCHS = 30
 BATCH_SIZE = 1
@@ -173,10 +173,6 @@ def to_batch(x, y):
         batched__y.append(y[i * BATCH_SIZE:(i + 1) * BATCH_SIZE])
     return batched__x, batched__y
 
-
-def normalize(x):
-    return x.astype(np.float)/255.0
-
 def load_model(name):
     params, args = pickle.load(open(name,'r'))
     act, dim, lr = args
@@ -193,23 +189,7 @@ if __name__ == '__main__':
     parser.add_argument('-labels', default='t10k-labels-idx1-ubyte')
     result = parser.parse_args()
 
-    mndata = MNIST('data/', return_type="numpy")
-    mndata.gz = True
-    train_image, train_labels = mndata.load_training()
-    train_image = normalize(train_image)
-    randomize = np.arange(len(train_image))
-    np.random.shuffle(randomize)
-    train_image = train_image[randomize]
-    train_labels = train_labels[randomize]
-    valid_image = train_image[:10000]
-    valid_labels = train_labels[:10000]
-    train_image = train_image[10000-1:-1]
-    train_labels = train_labels[10000-1:-1]
-
-
-    test_image, test_labels = mndata.load(os.path.join('data/', result.images), os.path.join('data/', result.labels))
-    test_image = normalize(np.array(test_image))
-    test_labels = np.array(test_labels)
+    train_image, train_labels, valid_image, valid_labels, test_image, test_labels = load_data(result.images, result.labels)
 
     print "Finish getting the data {0}".format(passed_time(start_time))
     lr = 0.001
@@ -217,7 +197,7 @@ if __name__ == '__main__':
     if use_model:
         multiNN = load_model(result.model)
     else:
-        multiNN = NN('ReLU', [len(train_image[0]), 200, 100, CLASSES], lr)
+        multiNN = NN('tanh', [len(train_image[0]), 200, 100, CLASSES], lr)
         size_training = len(train_image)
         print "Start training!"
         for epoch in range(EPOCHS):
