@@ -10,7 +10,7 @@ import argparse
 from loader import load_data
 
 EPOCHS = 30
-BATCH_SIZE = 1
+BATCH_SIZE = 8
 CLASSES = 10
 
 start_time = time.time()
@@ -192,12 +192,12 @@ if __name__ == '__main__':
     train_image, train_labels, valid_image, valid_labels, test_image, test_labels = load_data(result.images, result.labels)
 
     print "Finish getting the data {0}".format(passed_time(start_time))
-    lr = 0.001
+    lr = 0.01
     use_model = not result.model == 'None'
     if use_model:
         multiNN = load_model(result.model)
     else:
-        multiNN = NN('tanh', [len(train_image[0]), 200, 100, CLASSES], lr)
+        multiNN = NN('tanh', [len(train_image[0]), 300, 300, CLASSES], lr)
         size_training = len(train_image)
         print "Start training!"
         for epoch in range(EPOCHS):
@@ -211,6 +211,10 @@ if __name__ == '__main__':
             print "Loss for epoch {0} is {1}".format(epoch, loss / size_training)
             accu = multiNN.validate_batch(valid_image, valid_labels, 64)[0]
             print "Accuracy after epoch {0} is {1}".format(epoch, accu)
+
+            accu_test = multiNN.validate_batch(test_image, test_labels, 64)[0]
+            print "Accuracy in test after epoch {0} is {1}".format(epoch, accu_test)
+
             print "Done in {0}".format(passed_time(start_time))
 
     accu = multiNN.validate_batch(test_image, test_labels, 64)[0]
