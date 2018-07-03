@@ -12,7 +12,7 @@ def normalize(x):
     return x.astype(np.float)/255.0
 
 nn_param_choices = {
-    'nb_neurons': [200, 100],
+    'nb_neurons': [200, 200],
     'nb_layers': 2,
     'activation': ['tanh', 'sigmoid', 'ReLU']
 }
@@ -28,7 +28,7 @@ train_image, train_labels, valid_image, valid_labels, test_image, test_labels = 
 
 genome_handler_lo = GenomeHandler(nn_param_choices)
 
-num_generations = 7000
+num_generations = 20000
 population_size = 100
 
 ga = GA(genome_handler_lo)

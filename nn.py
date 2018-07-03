@@ -9,8 +9,8 @@ import sys
 import argparse
 from loader import load_data
 
-EPOCHS = 30
-BATCH_SIZE = 8
+EPOCHS = 20
+BATCH_SIZE = 1
 CLASSES = 10
 
 start_time = time.time()
@@ -197,7 +197,7 @@ if __name__ == '__main__':
     if use_model:
         multiNN = load_model(result.model)
     else:
-        multiNN = NN('tanh', [len(train_image[0]), 300, 300, CLASSES], lr)
+        multiNN = NN('ReLU', [len(train_image[0]), 200, CLASSES], lr)
         size_training = len(train_image)
         print "Start training!"
         for epoch in range(EPOCHS):

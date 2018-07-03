@@ -17,11 +17,19 @@ class GenomeHandler:
             for i in range(model.nb_layers):
                 w, b = model.params[i]
                 for column in range(1, model.params[i][0].shape[0]+1):
-                    if random.uniform(0, 1) < 0.01:
+                    if random.uniform(0, 1) < 0.05:
                         model.params[i][0][column-1:column] += np.random.normal(scale = 0.0081, size=(1, w.shape[1]))
                 for j in range(b.shape[0]):
-                    if random.uniform(0, 1) < 0.01:
+                    if random.uniform(0, 1) < 0.05:
                         model.params[i][1][j] += np.random.normal(scale = 0.0081)
+        return model
+
+    @staticmethod
+    def noise(model):
+        for i in range(model.nb_layers):
+            w, b = model.params[i]
+            model.params[i][0] += np.random.normal(scale = 0.0081, size=(w.shape[0], w.shape[1]))
+            model.params[i][1] += np.random.normal(scale = 0.0081, size=(b.shape[0],))
         return model
 
     @staticmethod
