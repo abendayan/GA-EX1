@@ -8,6 +8,7 @@ from mnist import MNIST
 import sys
 import argparse
 from loader import load_data
+import copy
 
 EPOCHS = 20
 BATCH_SIZE = 1
@@ -66,6 +67,12 @@ class NN:
         self.nb_layers = len(dim) - 2
         self.nb_neurons = dim[1:len(dim) - 1]
         self.activation = activation_function
+
+    def deepcopy(self):
+        dim = [784] + self.nb_neurons
+        dup = NN(self.activation, dim, self.lr)
+        dup.params = copy.deepcopy(self.params)
+        return dup
 
     def create_classifier(self, dims):
         self.params = []

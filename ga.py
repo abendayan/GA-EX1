@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import operator
+import copy
 
 METRIC_OPS = [operator.__lt__, operator.__gt__]
 METRIC_OBJECTIVES = [min, max]
@@ -52,16 +53,16 @@ class GA:
         prev_acc = 0
         for gen in range(1, num_generations):
             members = []
-            # keep 25% of the best
             bests = pop.get_best(int(pop_size * 0.10))
             members += bests
             worsts = pop.get_worst(int(pop_size * 0.90))
-            while len(members) < pop_size:
+            while len(members) < pop_size - 1:
                 index1 = np.random.randint(len(bests))
                 index2 = np.random.randint(len(worsts))
                 members.append(self.crossover(bests[index1], worsts[index2]))
-            for i in range(elitisme, len(members)):
-                members[i] = self.genome_handler.mutate(members[i], max(1, gen//4))
+            for i in range(1, len(members)):
+                members[i] = self.genome_handler.mutate(members[i])
+            members.append(self.genome_handler.noise(bests[0].deepcopy()))
             # elitisme = 1
             fit = []
             acc = []
