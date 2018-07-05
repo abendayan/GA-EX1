@@ -94,6 +94,7 @@ class GA:
                 print("Best loss on test: {:0.4f}, best accuracy on test: {:0.4f}%".format(best_model_loss, 100.0*best_model_acc))
         best = pop.get_best(1)[0]
         best.save("model_from_ga.model")
+        return best
 
     @staticmethod
     def evaluate(model, x_part, y_part):
