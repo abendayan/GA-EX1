@@ -76,7 +76,7 @@ class GA:
             pop = Population(members, fit, fitness)
 
             print("Generation {}: best loss: {:0.4f}, best accuracy: {:0.4f}%".format(gen + 1, min(fit), 100.0*max(acc)))
-            if max(acc) >= 0.91:
+            if max(acc) >= 0.94:
                 np.random.shuffle(self.randomize)
                 self.size_keep = min(50000, self.size_keep + 64)
                 print self.size_keep, (gen+1)
