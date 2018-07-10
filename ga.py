@@ -51,6 +51,7 @@ class GA:
         elitisme = 1
         prev_loss = 50
         prev_acc = 0
+        threshold = 0.88
         for gen in range(1, num_generations):
             members = []
             bests = pop.get_best(int(pop_size * 0.10))
@@ -76,18 +77,23 @@ class GA:
             pop = Population(members, fit, fitness)
 
             print("Generation {}: best loss: {:0.4f}, best accuracy: {:0.4f}%".format(gen + 1, min(fit), 100.0*max(acc)))
-            if max(acc) >= 0.94:
+            if max(acc) >= threshold:
                 np.random.shuffle(self.randomize)
                 self.size_keep = min(50000, self.size_keep + 64)
                 print self.size_keep, (gen+1)
             if (gen+1) % 100 == 0:
                 best_loss = min(fit)
-                best_model_acc_valid, best_model_loss_valid = self.evaluate(pop.get_best(1)[0], self.x_valid, self.y_valid)
-                best_model_acc, best_model_loss = self.evaluate(pop.get_best(1)[0], self.x_train, self.y_train)
+                best = pop.get_best(1)[0]
+                best_model_acc_valid, best_model_loss_valid = self.evaluate(best, self.x_valid, self.y_valid)
+                best_model_acc, best_model_loss = self.evaluate(best, self.x_test, self.y_test)
                 if best_model_loss < prev_loss:
-                    pop.get_best(1)[0].save("model_from_ga.model")
+                    best.save("model_from_ga.model")
                 else:
                     np.random.shuffle(self.randomize)
+                if best_model_acc > threshold:
+                    threshold += 0.02
+                    print "threshold: ", threshold
+                    self.size_keep = 64
                 prev_loss = best_model_loss
                 prev_acc = best_model_acc
                 print("Best loss on valid: {:0.4f}, best accuracy on valid: {:0.4f}%".format(best_model_loss_valid, 100.0*best_model_acc_valid))
