@@ -84,8 +84,7 @@ class GA:
             if (gen+1) % 100 == 0:
                 best_loss = min(fit)
                 best = pop.get_best(1)[0]
-                best_model_acc_valid, best_model_loss_valid = self.evaluate(best, self.x_valid, self.y_valid)
-                best_model_acc, best_model_loss = self.evaluate(best, self.x_test, self.y_test)
+                best_model_acc, best_model_loss = self.evaluate(best, self.x_valid, self.y_valid)
                 if best_model_loss < prev_loss:
                     best.save("model_from_ga.model")
                 else:
@@ -96,8 +95,7 @@ class GA:
                     self.size_keep = 64
                 prev_loss = best_model_loss
                 prev_acc = best_model_acc
-                print("Best loss on valid: {:0.4f}, best accuracy on valid: {:0.4f}%".format(best_model_loss_valid, 100.0*best_model_acc_valid))
-                print("Best loss on test: {:0.4f}, best accuracy on test: {:0.4f}%".format(best_model_loss, 100.0*best_model_acc))
+                print("Best loss on test: {:0.4f}, best accuracy on valid: {:0.4f}%".format(best_model_loss, 100.0*best_model_acc))
         best = pop.get_best(1)[0]
         best.save("model_from_ga.model")
         return best
